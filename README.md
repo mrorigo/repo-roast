@@ -4,7 +4,7 @@ A powerful tool that analyzes your Git repository and provides intelligent feedb
 
 ## Overview
 
-Repo Roast combines the repository scanning capabilities of [repomix](https://github.com/natemoo-re/repomix) with the analytical power of Large Language Models to deliver insightful code analysis reports. It can help you identify:
+Repo Roast combines the repository scanning capabilities of [repomix](https://github.com/yamadashy/repomix) with the analytical power of Large Language Models to deliver insightful code analysis reports. It can help you identify:
 
 - Code smells and refactoring opportunities
 - Production readiness gaps
