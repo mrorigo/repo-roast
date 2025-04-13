@@ -1,0 +1,1 @@
+Analyze the provided codebase context and generate a detailed refactoring plan to improve its long-term maintainability. Identify code smells, complex modules, potential technical debt, and suggest specific refactoring actions, prioritizing those with the highest impact.

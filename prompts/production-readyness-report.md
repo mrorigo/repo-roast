@@ -1,0 +1,1 @@
+Analyze the provided codebase context and generate a report assessing its readiness for production deployment. Evaluate aspects like error handling, logging, configuration management, security considerations, dependencies, and adherence to common best practices. Provide actionable recommendations for improvement.
