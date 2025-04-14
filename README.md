@@ -32,7 +32,7 @@ Repo Roast combines the repository scanning capabilities of [repomix](https://gi
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/repo-roast.git
+git clone https://github.com/mrorigo/repo-roast.git
 cd repo-roast
 ```
 
