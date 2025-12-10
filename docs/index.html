@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repo Roast - AI-Powered Code Analysis</title>
+    <meta name="description"
+        content="Repo Roast combines repository scanning with Large Language Models to deliver insightful code analysis reports.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-color: #e0e0e0;
+            --primary-gradient: linear-gradient(135deg, #FF4D4D 0%, #F9CB28 100%);
+            --secondary-bg: #111;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-orange: #ff6b6b;
+            --accent-yellow: #feca57;
+            --font-main: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Ambient Background */
+        .ambient-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(255, 77, 77, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(249, 203, 40, 0.08), transparent 25%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 5%;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            font-weight: 400;
+            font-size: 0.95rem;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 1;
+        }
+
+        .cta-btn-header {
+            padding: 0.5rem 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 99px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .cta-btn-header:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Hero Container */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 8rem 2rem 4rem 2rem;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            max-width: 900px;
+        }
+
+        .hero h1 span {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: #aaa;
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: #000;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 77, 77, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            animation: bounce 2s infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Features Section */
+        .section {
+            padding: 6rem 5%;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 2rem;
+            border-radius: 16px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-orange);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .feature-card p {
+            color: #999;
+            font-size: 0.95rem;
+        }
+
+        /* Terminal Demo Section */
+        .demo-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #1e1e1e;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            overflow: hidden;
+            font-family: var(--font-mono);
+        }
+
+        .terminal-header {
+            background: #2d2d2d;
+            padding: 0.8rem 1rem;
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot.red {
+            background: #ff5f56;
+        }
+
+        .dot.yellow {
+            background: #ffbd2e;
+        }
+
+        .dot.green {
+            background: #27c93f;
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
+            color: #d4d4d4;
+            font-size: 0.9rem;
+            min-height: 300px;
+        }
+
+        .prompt {
+            color: #27c93f;
+        }
+
+        .cmd {
+            color: #fff;
+        }
+
+        .output {
+            color: #aaa;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        .highlight {
+            color: var(--accent-yellow);
+        }
+
+        /* Usage Steps */
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .step-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.1);
+            line-height: 1;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .code-block {
+            background: #111;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            margin-top: 0.8rem;
+            overflow-x: auto;
+        }
+
+        /* Prompts Showcase */
+        .prompt-badges {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .badge:hover {
+            border-color: var(--accent-orange);
+            background: rgba(255, 77, 77, 0.1);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid #222;
+            padding: 4rem 5%;
+            text-align: center;
+            color: #666;
+        }
+
+        footer a {
+            color: #999;
+            border-bottom: 1px dotted #666;
+        }
+
+        footer a:hover {
+            color: var(--accent-orange);
+            border-bottom-style: solid;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <nav>
+        <div class="logo">
+            <span>🔥</span> Repo Roast
+        </div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#demo">How it Works</a>
+            <a href="#install">Install</a>
+        </div>
+        <a href="https://github.com/mrorigo/repo-roast" class="cta-btn-header">View on GitHub</a>
+    </nav>
+
+    <section class="hero">
+        <h1>Turn up the heat on <br><span>Your Codebase</span></h1>
+        <p>Intelligent repository analysis powered by LLMs. Identify refactoring opportunities, production gaps, and
+            code smells with a single command.</p>
+        <div class="hero-buttons">
+            <a href="#install" class="btn btn-primary">Start Roasting</a>
+            <a href="https://github.com/mrorigo/repo-roast" class="btn btn-secondary">Documentation</a>
+        </div>
+        <div class="scroll-indicator">↓</div>
+    </section>
+
+    <section id="features" class="section">
+        <div class="section-title">
+            <h2>Why Repo Roast?</h2>
+            <p>More than just a linter. It's an AI software architect.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Deep Analysis</h3>
+                <p>Scans your entire repository structure using <strong>repomix</strong> to understand the full context
+                    of your project.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>LLM Powered</h3>
+                <p>Leverages state-of-the-art models like Gemma, GPT-4, and Claude to provide human-like architectural
+                    feedback.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚙️</div>
+                <h3>Fully Customizable</h3>
+                <p>Define your own "Roast" types. Need a comedic review? A security audit? Just add a markdown prompt.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Token Optimized</h3>
+                <p>Smart context packing and distinct optimization modes (compact & aggressive) to save on API costs.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Model Freedom</h3>
+                <p>Switch between OpenAI, Gemma, or any compatible API endpoint to find your perfect balance of speed
+                    and intelligence.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h3>Actionable Reports</h3>
+                <p>Generate comprehensive markdown reports that are ready to be pasted directly into documentation or PR
+                    descriptions.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="demo" class="section">
+        <div class="section-title">
+            <h2>See it in action</h2>
+        </div>
+
+        <div class="demo-container">
+            <div class="terminal-header">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <div class="terminal-body" id="typewriter">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </section>
+
+    <section id="install" class="section">
+        <div class="section-title">
+            <h2>Get Started in Seconds</h2>
+        </div>
+
+        <div class="steps-container">
+            <div class="step-item">
+                <div class="step-number">01</div>
+                <div class="step-content">
+                    <h3>Clone & Install</h3>
+                    <p>Get the code and install dependencies using <code>uv</code> for speed.</p>
+                    <div class="code-block">
+                        git clone https://github.com/mrorigo/repo-roast.git
+                        cd repo-roast
+                        uv pip install -r requirements.txt</div>
+                </div>
+            </div>
+
+            <div class="step-item">
+                <div class="step-number">02</div>
+                <div class="step-content">
+                    <h3>Configure API</h3>
+                    <p>Set up your LLM credentials in a simple <code>.env</code> file.</p>
+                    <div class="code-block">echo "OPENAI_API_KEY=sk-..." > .env</div>
+                </div>
+            </div>
+
+            <div class="step-item">
+                <div class="step-number">03</div>
+                <div class="step-content">
+                    <h3>Run the Roast</h3>
+                    <p>Choose your roast flavor and let it cook.</p>
+                    <div class="code-block">uv run repo_roast.py --type maintainability-refactoring-plan --output
+                        report.md</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="prompt-badges">
+            <div class="badge">maintainability-refactoring-plan</div>
+            <div class="badge">production-readyness-report</div>
+            <div class="badge">test-coverage-plan</div>
+            <div class="badge">comedic-engineer</div>
+        </div>
+    </section>
+
+    <footer>
+        <p>Built with ❤️ by <a href="https://github.com/mrorigo">mrorigo</a>. Released under MIT License.</p>
+    </footer>
+
+    <script>
+        // Simple Typewriter Effect for Terminal
+        const terminalContent = [
+            { text: "$ uv run repo_roast.py --type maintainability-refactoring-plan", class: "cmd" },
+            { text: "Analyzing repository structure...", class: "output" },
+            { text: "✓ Found 42 source files", class: "output" },
+            { text: "✓ Token optimization: aggressive", class: "output" },
+            { text: "Sending to LLM (Model: gemma3:4b)...", class: "output" },
+            { text: "Generating insights...", class: "output" },
+            { text: "Done! Report saved to report.md", class: "highlight" },
+            { text: "$ cat report.md | head -n 5", class: "cmd" },
+            { text: "# Refactoring Plan\n\n## High Priority\n- Extract monolithic class `UserManager` in `auth.py`\n- Fix N+1 query pattern in `database/models.py`", class: "output" }
+        ];
+
+        const terminalBody = document.getElementById('typewriter');
+        let lineIndex = 0;
+        let charIndex = 0;
+        let isTypingHtml = false; // Simplified logic for this demo
+
+        function typeLine() {
+            if (lineIndex >= terminalContent.length) return;
+
+            const lineData = terminalContent[lineIndex];
+
+            // Create a temporary element for the line if it doesn't exist
+            let currentLineEl = terminalBody.lastElementChild;
+            if (!currentLineEl || currentLineEl.dataset.completed === "true") {
+                currentLineEl = document.createElement('div');
+                if (lineData.text.startsWith("$")) {
+                    const promptSpan = document.createElement('span');
+                    promptSpan.className = 'prompt';
+                    promptSpan.textContent = 'user@repo-roast:~/src $ ';
+                    currentLineEl.appendChild(promptSpan);
+                }
+                const textSpan = document.createElement('span');
+                textSpan.className = lineData.class;
+                currentLineEl.appendChild(textSpan);
+                terminalBody.appendChild(currentLineEl);
+            }
+
+            // If it's a command, type it out. If output, show it instantly for better pacing.
+            if (lineData.class === "cmd") {
+                const textSpan = currentLineEl.lastElementChild;
+                if (charIndex < lineData.text.length) {
+                    textSpan.textContent += lineData.text.charAt(charIndex);
+                    charIndex++;
+                    setTimeout(typeLine, 50); // Typing speed
+                } else {
+                    currentLineEl.dataset.completed = "true";
+                    lineIndex++;
+                    charIndex = 0;
+                    setTimeout(typeLine, 500); // Pause after command
+                }
+            } else {
+                // Instant output
+                const textSpan = currentLineEl.lastElementChild;
+                textSpan.textContent = lineData.text;
+                currentLineEl.dataset.completed = "true";
+                lineIndex++;
+                setTimeout(typeLine, 200); // Small pause between outputs
+            }
+        }
+
+        // Start animation when scrolled into view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    typeLine();
+                    observer.disconnect();
+                }
+            });
+        });
+
+        observer.observe(document.querySelector('.demo-container'));
+
+    </script>
+</body>
+
+</html>
